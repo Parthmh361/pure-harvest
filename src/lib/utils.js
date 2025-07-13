@@ -41,6 +41,13 @@ export function formatDateTime(date) {
   }).format(new Date(date))
 }
 
+// Format time
+export function formatTime(date) {
+  // Example: returns HH:mm
+  const d = new Date(date)
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
 // Relative date formatting
 export function formatRelativeTime(date) {
   if (!date) return 'N/A'
