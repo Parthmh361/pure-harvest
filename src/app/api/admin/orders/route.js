@@ -21,16 +21,17 @@ export async function GET(request) {
     let filter = {}
     if (status && status !== 'all') filter.status = status
     if (search) {
-      filter.$or = [
-        { orderNumber: { $regex: search, $options: 'i' } },
-        { 'buyer.name': { $regex: search, $options: 'i' } }
-      ]
+      filter.orderNumber = { $regex: search, $options: 'i' }
+      // Remove 'buyer.name' search for now
     }
 
     const [orders, total] = await Promise.all([
       Order.find(filter)
         .populate('buyer', 'name email')
-        .populate('items.farmer', 'name businessName')
+        .populate({
+          path: 'items.product',
+          populate: { path: 'farmer', model: 'User', select: 'name businessName' }
+        })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)

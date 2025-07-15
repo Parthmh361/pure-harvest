@@ -3,7 +3,7 @@ import connectDB from '@/lib/mongodb'
 import Order from '@/models/order'
 import Product from '@/models/product'
 import User from '@/models/user'
-import { withAuth } from '@/lib/auth' // <-- use withAuth
+import { withAuth, requireAuth } from '@/lib/auth' // <-- use withAuth
 import { generateOrderNumber } from '@/lib/utils'
 import NotificationService from '@/lib/notification-service'
 import mongoose from 'mongoose'
@@ -66,11 +66,7 @@ async function getOrders(request) {
         })
         .populate({
           path: 'items.product',
-          select: 'name price images category unit'
-        })
-        .populate({
-          path: 'items.farmer',
-          select: 'name email phone'
+          populate: { path: 'farmer', model: 'User', select: 'name email' }
         })
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -198,13 +194,7 @@ export async function POST(request) {
 
       processedItems.push({
         product: product._id,
-        productName: product.name,
-        farmer: product.farmer._id,
-        farmerName: product.farmer.name,
-        quantity: item.quantity,
-        price: product.price,
-        total: itemTotal,
-        unit: product.unit
+        quantity: item.quantity
       })
 
       // Update product stock
@@ -253,8 +243,10 @@ export async function POST(request) {
     // Populate the order for response
     const populatedOrder = await Order.findById(savedOrder._id)
       .populate('buyer', 'name email phone')
-      .populate('items.farmer', 'name email')
-      .populate('items.product', 'name images')
+      .populate({
+        path: 'items.product',
+        populate: { path: 'farmer', model: 'User', select: 'name email' }
+      })
 
     return NextResponse.json({
       success: true,

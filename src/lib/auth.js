@@ -82,55 +82,47 @@ export function verifyToken(token) {
   }
 }
 
-// export async function requireAuth(request) {
-//   try {
-//     console.log('🔐 Starting authentication check...')
-    
-//     const token = extractToken(request)
-//     if (!token) {
-//       console.log('❌ No token found')
-//       return null
-//     }
-
-//     const decoded = verifyToken(token)
-//     if (!decoded || !decoded.userId) {
-//       console.log('❌ Invalid token payload')
-//       return null
-//     }
-
-//     console.log('🔍 Looking up user:', decoded.userId)
-    
-//     await connectDB()
-//     const user = await User.findById(decoded.userId).select('-password')
-    
-//     if (!user) {
-//       console.log('❌ User not found:', decoded.userId)
-//       return null
-//     }
-
-//     if (!user.isActive) {
-//       console.log('❌ User account is inactive:', decoded.userId)
-//       return null
-//     }
-
-//     console.log('✅ Authentication successful:', {
-//       id: user._id,
-//       email: user.email,
-//       role: user.role
-//     })
-
-//     return {
-//       id: user._id.toString(),
-//       email: user.email,
-//       name: user.name,
-//       role: user.role,
-//       isVerified: user.isVerified
-//     }
-//   } catch (error) {
-//     console.error('Auth error:', error)
-//     return null
-//   }
-// }
+export async function requireAuth(request) {
+  try {
+    console.log('🔐 Starting authentication check...')
+    const token = extractToken(request)
+    if (!token) {
+      console.log('❌ No token found')
+      return null
+    }
+    const decoded = verifyToken(token)
+    if (!decoded || !decoded.userId) {
+      console.log('❌ Invalid token payload')
+      return null
+    }
+    console.log('🔍 Looking up user:', decoded.userId)
+    await connectDB()
+    const user = await User.findById(decoded.userId).select('-password')
+    if (!user) {
+      console.log('❌ User not found:', decoded.userId)
+      return null
+    }
+    if (!user.isActive) {
+      console.log('❌ User account is inactive:', decoded.userId)
+      return null
+    }
+    console.log('✅ Authentication successful:', {
+      id: user._id,
+      email: user.email,
+      role: user.role
+    })
+    return {
+      id: user._id.toString(),
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      isVerified: user.isVerified
+    }
+  } catch (error) {
+    console.error('Auth error:', error)
+    return null
+  }
+}
 
 export function requireRole(roles) {
   return async (request) => {
@@ -154,20 +146,18 @@ export function requireRole(roles) {
     return user
   }
 }
-export function requireAuth(handler, allowedRoles = []) {
+export function requireAuthMiddleware(handler, allowedRoles = []) {
   return async function(request, ...args) {
-    // Authenticate user
-    const user = await authenticateUser(request); // see below for implementation
+    const user = await authenticateUser(request)
     if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
     }
     if (allowedRoles.length && !allowedRoles.includes(user.role)) {
-      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 })
     }
-    // Attach user to request for downstream use
-    request.user = user;
-    return handler(request, ...args);
-  };
+    request.user = user
+    return handler(request, ...args)
+  }
 }
 
 // Helper function for authentication logic (your previous requireAuth logic)
@@ -207,4 +197,13 @@ export function withAuth(handler, allowedRoles = []) {
     request.user = user
     return handler(request, ...args)
   }
+}
+// Admin-specific authentication middleware
+export async function requireAdmin(request) {
+  const user = await requireAuth(request)
+  console.log('ADMIN API USER:', user)
+  if (!user || user.role !== 'admin') {
+    return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+  }
+  return user
 }
