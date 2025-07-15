@@ -352,7 +352,7 @@ export default function MobileLayout({ children }) {
           )}
 
           {/* Additional Links */}
-          <div className="space-y-1 mb-6">
+          {/* <div className="space-y-1 mb-6">
             <h3 className="text-responsive-sm font-medium text-gray-500 mb-3 uppercase tracking-wider px-3">
               Support
             </h3>
@@ -378,7 +378,7 @@ export default function MobileLayout({ children }) {
               </div>
               <ChevronRight className="h-4 w-4 text-gray-400" />
             </Link>
-          </div>
+          </div> */}
 
           {/* Auth Actions */}
           <div className="pt-4 border-t">
