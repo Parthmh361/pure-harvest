@@ -21,6 +21,7 @@ import {
   PlusCircle
 } from 'lucide-react'
 import NotificationBell from '@/components/notifications/notification-bell-simple'
+import LogoutButton from '../auth/logout-button'
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -53,15 +54,7 @@ const Header = () => {
     }
   }, [])
 
-  const handleLogout = () => {
-    localStorage.removeItem('user')
-    localStorage.removeItem('token')
-    localStorage.removeItem('cart')
-    setUser(null)
-    setCartCount(0)
-    setIsMenuOpen(false)
-    router.push('/')
-  }
+
 
   // Role-based navigation items
   const getRoleBasedLinks = () => {
@@ -317,7 +310,7 @@ const Header = () => {
 
                     {/* Settings & Logout */}
                     <div className="border-t border-gray-100 py-2">
-                      <Link
+                      {/* <Link
                         href="/settings"
                         className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                         onClick={() => setIsMenuOpen(false)}
@@ -327,18 +320,9 @@ const Header = () => {
                           <div className="font-medium">Settings</div>
                           <div className="text-xs text-gray-500">Account preferences</div>
                         </div>
-                      </Link>
+                      </Link> */}
                       
-                      <button
-                        onClick={handleLogout}
-                        className="flex items-center w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                      >
-                        <LogOut className="h-4 w-4 mr-3" />
-                        <div className="flex-1 text-left">
-                          <div className="font-medium">Logout</div>
-                          <div className="text-xs text-red-400">Sign out of your account</div>
-                        </div>
-                      </button>
+                      <LogoutButton/>
                     </div>
                   </div>
                 )}
@@ -421,22 +405,16 @@ const Header = () => {
                     )
                   })}
                   {/* Settings */}
-                  <Link
+                  {/* <Link
                     href="/settings"
                     className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <Settings className="h-4 w-4 mr-3 text-gray-400" />
                     <span>Settings</span>
-                  </Link>
+                  </Link> */}
                   {/* Logout */}
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg"
-                  >
-                    <LogOut className="h-4 w-4 mr-3" />
-                    <span>Logout</span>
-                  </button>
+                 <LogoutButton/>
                 </div>
               )}
             </nav>

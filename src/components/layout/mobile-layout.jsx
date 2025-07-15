@@ -28,6 +28,7 @@ import {
 import useAuthStore from '@/stores/auth-store'
 import useCartStore from '@/stores/cart-store'
 import NotificationBell from '@/components/notifications/notification-bell'
+import LogoutButton from '@/components/auth/logout-button'
 
 const buyerSidebarLinks = [
   {
@@ -136,11 +137,7 @@ export default function MobileLayout({ children }) {
     setIsDrawerOpen(false)
   }
 
-  const handleLogout = () => {
-    logout()
-    closeDrawer()
-    router.push('/')
-  }
+
 
   const navigationItems = [
     { href: '/', icon: Home, label: 'Home', active: pathname === '/' },
@@ -385,15 +382,8 @@ export default function MobileLayout({ children }) {
 
           {/* Auth Actions */}
           <div className="pt-4 border-t">
-            {isAuthenticated ? (
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 py-3"
-                onClick={handleLogout}
-              >
-                <LogOut className="h-5 w-5 mr-3" />
-                <span className="text-responsive-base">Logout</span>
-              </Button>
+            {user ? (
+             <LogoutButton/>
             ) : (
               <div className="space-y-3">
                 <Link href="/login" onClick={closeDrawer}>

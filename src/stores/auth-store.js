@@ -111,6 +111,7 @@ const useAuthStore = create(
         })
 
         // Clear localStorage
+        document.cookie = 'auth-token=; Max-Age=0; path=/;'
         localStorage.removeItem('user')
         localStorage.removeItem('token')
         localStorage.removeItem('cart')
