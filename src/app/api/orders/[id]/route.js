@@ -122,10 +122,11 @@ async function updateOrder(request, params) {
     let canUpdate = false
     
     if (status === 'cancelled') {
-      // Buyers can cancel their own orders, admins can cancel any order
+      // Buyers can cancel their own orders, admins can cancel any order, farmers can reject their own orders
       canUpdate = 
         (user.role === 'buyer' && order.buyer.toString() === user.id) ||
-        user.role === 'admin'
+        user.role === 'admin' ||
+        (user.role === 'farmer' && order.items.some(item => item.farmer.toString() === user.id))
     } else {
       // Other status updates: admin or farmers involved in the order
       canUpdate = 

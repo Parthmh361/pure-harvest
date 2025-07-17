@@ -114,3 +114,31 @@ export async function POST(request) {
     )
   }
 }
+
+// Update address
+export async function PATCH(request) {
+  try {
+    const user = await requireAuth(request)
+    if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+
+    await connectDB()
+    const { addressId, data } = await request.json()
+    if (!addressId || !data) return NextResponse.json({ error: 'Missing addressId or data' }, { status: 400 })
+
+    // Update address in user's addresses array
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: user.id, "addresses._id": addressId },
+      { $set: { "addresses.$": { ...data, _id: addressId } } },
+      { new: true, select: 'addresses' }
+    )
+
+    if (!updatedUser) return NextResponse.json({ error: 'Address not found' }, { status: 404 })
+
+    return NextResponse.json({
+      success: true,
+      addresses: updatedUser.addresses
+    })
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to update address' }, { status: 500 })
+  }
+}

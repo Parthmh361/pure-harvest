@@ -34,10 +34,18 @@ const userSchema = new mongoose.Schema({
     default: 'buyer'
   },
   // Updated address field to handle both string and object
-  address: {
-    type: mongoose.Schema.Types.Mixed, // Allows both string and object
-    default: ''
-  },
+  addresses: [
+    {
+      _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
+      type: { type: String, required: true }, // e.g. 'home', 'work', 'pickup'
+      street: { type: String, required: true },
+      city: { type: String, required: true },
+      state: { type: String, required: true },
+      pincode: { type: String, required: true },
+      landmark: { type: String },
+      isDefault: { type: Boolean, default: false }
+    }
+  ],
   businessName: {
     type: String,
     default: ''

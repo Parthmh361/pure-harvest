@@ -55,7 +55,8 @@ export default function ProfilePage() {
     landmark: ''
   })
   const [editingAddress, setEditingAddress] = useState(null)
-  
+  const [editAddressData, setEditAddressData] = useState({})
+
   // Password State
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -171,6 +172,38 @@ export default function ProfilePage() {
     } catch (error) {
       console.error('Address add error:', error)
       alert('Failed to add address')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleEditAddress = (address) => {
+    setEditingAddress(address._id)
+    setEditAddressData(address)
+  }
+
+  const handleEditAddressSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      const response = await fetch('/api/profile/addresses', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ addressId: editingAddress, data: editAddressData })
+      })
+      const data = await response.json()
+      if (response.ok) {
+        setAddresses(data.addresses)
+        setEditingAddress(null)
+        alert('Address updated successfully!')
+      } else {
+        alert(data.error || 'Failed to update address')
+      }
+    } catch (error) {
+      alert('Failed to update address')
     } finally {
       setLoading(false)
     }
@@ -406,7 +439,7 @@ export default function ProfilePage() {
                           )}
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" onClick={() => handleEditAddress(address)}>
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button 
@@ -525,6 +558,105 @@ export default function ProfilePage() {
                 </form>
               </CardContent>
             </Card>
+
+            {/* Edit Address */}
+            {editingAddress ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Edit className="h-5 w-5 mr-2" />
+                    Edit Address
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleEditAddressSubmit} className="space-y-4">
+                    <div>
+                      <Label htmlFor="editAddressType">Address Type</Label>
+                      <select
+                        id="editAddressType"
+                        value={editAddressData.type}
+                        onChange={(e) => setEditAddressData({...editAddressData, type: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                      >
+                        <option value="home">Home</option>
+                        <option value="work">Work</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="editStreet">Street Address</Label>
+                      <Textarea
+                        id="editStreet"
+                        value={editAddressData.street}
+                        onChange={(e) => setEditAddressData({...editAddressData, street: e.target.value})}
+                        placeholder="House no, Building name, Street"
+                        rows={2}
+                        required
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="editCity">City</Label>
+                        <Input
+                          id="editCity"
+                          value={editAddressData.city}
+                          onChange={(e) => setEditAddressData({...editAddressData, city: e.target.value})}
+                          placeholder="City"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="editState">State</Label>
+                        <select
+                          id="editState"
+                          value={editAddressData.state}
+                          onChange={(e) => setEditAddressData({...editAddressData, state: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                          required
+                        >
+                          <option value="">Select State</option>
+                          {INDIAN_STATES.map(state => (
+                            <option key={state} value={state}>{state}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="editPincode">Pincode</Label>
+                        <Input
+                          id="editPincode"
+                          value={editAddressData.pincode}
+                          onChange={(e) => setEditAddressData({...editAddressData, pincode: e.target.value})}
+                          placeholder="Pincode"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="editLandmark">Landmark (Optional)</Label>
+                      <Input
+                        id="editLandmark"
+                        value={editAddressData.landmark}
+                        onChange={(e) => setEditAddressData({...editAddressData, landmark: e.target.value})}
+                        placeholder="Nearby landmark"
+                      />
+                    </div>
+
+                    <Button type="submit" disabled={loading}>
+                      <Save className="h-4 w-4 mr-2" />
+                      {loading ? 'Saving...' : 'Save Address'}
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => setEditingAddress(null)}>
+                      Cancel
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            ) : null}
           </TabsContent>
 
           {/* Security */}

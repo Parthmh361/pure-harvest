@@ -40,9 +40,10 @@ export default function OrdersPage() {
       return
     }
 
-    if (user?.role !== 'buyer') {
-      console.log('❌ Not a buyer, redirecting to home')
-      router.push('/')
+    // Only allow buyers
+    if (user?.role !== 'buyer' && user?.role !== 'farmer') {
+      console.warn(user?.role)
+      router.push('/') // or '/'
       return
     }
 
@@ -151,7 +152,7 @@ export default function OrdersPage() {
   // Show loading state
   if (loading && orders.length === 0) {
     return (
-      <Layout requireAuth allowedRoles={['buyer']}>
+      <Layout requireAuth allowedRoles={['buyer', 'farmer', 'admin']}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
@@ -215,7 +216,7 @@ export default function OrdersPage() {
   }
 
   return (
-    <Layout requireAuth allowedRoles={['buyer']}>
+    <Layout requireAuth allowedRoles={['buyer', 'farmer', 'admin']}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">

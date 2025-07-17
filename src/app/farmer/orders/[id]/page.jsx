@@ -7,12 +7,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { formatCurrency, formatDate } from "@/lib/utils"
+import useAuthStore from '@/stores/auth-store'
+import { ArrowLeft, Edit, Mail, MessageSquare, Package, Phone, User, CheckCircle, XCircle, Truck, Save } from "lucide-react"
+import { Separator } from "@/components/ui/separator"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import Image from "next/image"
 
 export default function FarmerOrderDetailPage() {
   const { id } = useParams()
   const router = useRouter()
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [updating, setUpdating] = useState(false)
+  const [trackingNumber, setTrackingNumber] = useState("")
+  const [orderNotes, setOrderNotes] = useState("")
+  const [editingNotes, setEditingNotes] = useState(false)
+
+  const { user, isAuthenticated } = useAuthStore()
 
   useEffect(() => {
     async function fetchOrder() {
@@ -21,8 +34,11 @@ export default function FarmerOrderDetailPage() {
           headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
         })
         const data = await res.json()
-        if (res.ok) setOrder(data.order)
-        else router.push("/farmer/orders")
+        if (res.ok) {
+          setOrder(data.order)
+          setTrackingNumber(data.order.trackingNumber || "")
+          setOrderNotes(data.order.orderNotes || "")
+        } else router.push("/farmer/orders")
       } catch {
         router.push("/farmer/orders")
       } finally {
@@ -32,41 +48,10 @@ export default function FarmerOrderDetailPage() {
     fetchOrder()
   }, [id, router])
 
-  if (loading) return <div className="p-8 text-center">Loading...</div>
-  if (!order) return <div className="p-8 text-center">Order not found.</div>
-  const fetchOrderDetails = async () => {
-    try {
-      setLoading(true)
-      
-      const response = await fetch(`/api/orders/${params.id}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setOrder(data.order)
-        setTrackingNumber(data.order.trackingNumber || '')
-        setOrderNotes(data.order.orderNotes || '')
-      } else {
-        console.error('Failed to fetch order:', data.error)
-        router.push('/farmer/orders')
-      }
-    } catch (error) {
-      console.error('Order fetch error:', error)
-      router.push('/farmer/orders')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const updateOrderStatus = async (newStatus, additionalData = {}) => {
     setUpdating(true)
-    
     try {
-      const response = await fetch(`/api/orders/${params.id}`, {
+      const response = await fetch(`/api/orders/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -77,9 +62,7 @@ export default function FarmerOrderDetailPage() {
           ...additionalData
         })
       })
-
       const data = await response.json()
-
       if (response.ok) {
         setOrder(data.order)
         alert('Order status updated successfully!')
@@ -96,9 +79,8 @@ export default function FarmerOrderDetailPage() {
 
   const saveOrderNotes = async () => {
     setUpdating(true)
-    
     try {
-      const response = await fetch(`/api/orders/${params.id}`, {
+      const response = await fetch(`/api/orders/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -108,9 +90,7 @@ export default function FarmerOrderDetailPage() {
           adminNotes: orderNotes
         })
       })
-
       const data = await response.json()
-
       if (response.ok) {
         setOrder(data.order)
         setEditingNotes(false)
@@ -443,7 +423,7 @@ export default function FarmerOrderDetailPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => editingNotes ? setEditingNotes(false) : setEditingNotes(true)}
+                    onClick={() => setEditingNotes(!editingNotes)}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -501,7 +481,9 @@ export default function FarmerOrderDetailPage() {
                 <div className="flex justify-between text-sm">
                   <span>Payment Status</span>
                   <Badge variant={order.paymentStatus === 'paid' ? 'default' : 'secondary'}>
-                    {order.paymentStatus}
+                    {(order.paymentStatus
+                      ? order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)
+                      : 'Unknown')}
                   </Badge>
                 </div>
                 <Separator />

@@ -101,19 +101,20 @@ export default function CheckoutPage() {
     }
 
     setLoading(true)
+
     try {
       const orderData = {
         items: items.map(item => ({
           productId: item._id,
           quantity: item.quantity,
-          price: item.price
+          price: item.price,
+          farmer: item.farmer?._id || item.farmer // <-- ensure farmer is sent
         })),
         shippingAddress,
         paymentMethod,
         orderNotes,
         totalAmount: subtotal + shipping + tax
       }
-
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: {
@@ -126,10 +127,12 @@ export default function CheckoutPage() {
       const data = await response.json()
 
       if (response.ok) {
+        // Success: show confirmation, clear cart, etc.
         setOrderId(data.order._id)
         setOrderPlaced(true)
         clearCart()
       } else {
+        // Error: show error message
         alert(data.error || 'Failed to place order')
       }
     } catch (error) {

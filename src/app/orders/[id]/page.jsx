@@ -439,7 +439,9 @@ export default function OrderDetailsPage({ params }) {
                 <div className="flex justify-between">
                   <span>Payment Status</span>
                   <Badge variant={order.paymentStatus === 'paid' ? 'default' : 'secondary'}>
-                    {order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}
+                    {order.paymentStatus
+                      ? order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)
+                      : 'Unknown'}
                   </Badge>
                 </div>
               </CardContent>

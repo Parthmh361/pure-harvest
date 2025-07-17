@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Layout from '@/components/layout/layout'
 import { Button } from '@/components/ui/button'
@@ -29,6 +29,7 @@ export default function AddProductPage() {
   
   const [loading, setLoading] = useState(false)
   const [imageUploading, setImageUploading] = useState(false)
+  const [addresses, setAddresses] = useState([])
   
   // Form state
   const [formData, setFormData] = useState({
@@ -47,6 +48,18 @@ export default function AddProductPage() {
   })
 
   const [errors, setErrors] = useState({})
+
+  useEffect(() => {
+    // Fetch addresses for the logged-in user
+    async function fetchAddresses() {
+      const response = await fetch('/api/profile/addresses', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      })
+      const data = await response.json()
+      if (response.ok) setAddresses(data.addresses)
+    }
+    fetchAddresses()
+  }, [])
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -480,6 +493,35 @@ export default function AddProductPage() {
                   <p className="text-sm text-gray-600 mt-2">Uploading images...</p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Pickup Address */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Package className="h-5 w-5 mr-2" />
+                Pickup Address
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label htmlFor="pickupAddress">Pickup Address *</Label>
+                <select
+                  id="pickupAddress"
+                  value={formData.pickupAddress}
+                  onChange={e => handleInputChange('pickupAddress', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md"
+                  required
+                >
+                  <option value="">Select Pickup Address</option>
+                  {addresses.map(addr => (
+                    <option key={addr._id} value={addr._id}>
+                      {addr.street}, {addr.city}, {addr.state} {addr.pincode}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </CardContent>
           </Card>
 

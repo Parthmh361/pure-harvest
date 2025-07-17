@@ -5,12 +5,13 @@ import connectDB from '@/lib/mongodb'
 import Product from '@/models/product'
 import Order from '@/models/order'
 import { requireAuth } from '@/lib/auth'
+import mongoose from 'mongoose'
 
 export const GET = requireAuth(async (request) => {
   try {
     await connectDB()
     
-    const farmerId = request.user.userId
+    const farmerId = new mongoose.Types.ObjectId(request.user.userId)
 
     // Get current month for revenue calculation
     const now = new Date()
@@ -31,9 +32,9 @@ export const GET = requireAuth(async (request) => {
 
     // Get orders statistics
     const [totalOrders, pendingOrders] = await Promise.all([
-      Order.countDocuments({ 'items.farmerId': farmerId }),
+      Order.countDocuments({ 'items.farmer': farmerId }),
       Order.countDocuments({ 
-        'items.farmerId': farmerId, 
+        'items.farmer': farmerId, 
         status: { $in: ['pending', 'confirmed'] }
       })
     ])
@@ -42,17 +43,15 @@ export const GET = requireAuth(async (request) => {
     const revenueAggregation = await Order.aggregate([
       {
         $match: {
-          'items.farmerId': farmerId,
+          'items.farmer': farmerId,
           status: { $ne: 'cancelled' },
           createdAt: { $gte: startOfMonth }
         }
       },
-      {
-        $unwind: '$items'
-      },
+      { $unwind: '$items' },
       {
         $match: {
-          'items.farmerId': farmerId
+          'items.farmer': farmerId
         }
       },
       {

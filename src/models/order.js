@@ -1,22 +1,41 @@
 import mongoose from 'mongoose'
 
+const orderItemSchema = new mongoose.Schema({
+  product: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Product'
+  },
+  quantity: {
+    type: Number
+  },
+  price: {
+    type: Number,
+    required: true
+  },
+  farmer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  }
+}, { _id: false })
+
 const orderSchema = new mongoose.Schema({
   buyer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-  items: [{
-    product: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Product'
-    },
-    quantity: {
-      type: Number
-    }
-  }],
+  items: [orderItemSchema],
   status: {
     type: String,
-    enum: ['pending', 'in_transit', 'delivered', 'cancelled'],
+    enum: [
+      'pending',
+      'confirmed',
+      'preparing',
+      'ready',
+      'shipped',
+      'delivered',
+      'cancelled'
+    ],
     default: 'pending'
   },
   logisticsId: {

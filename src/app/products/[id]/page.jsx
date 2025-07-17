@@ -71,7 +71,10 @@ export default function ProductDetailPage() {
 
     // Ensure product has proper farmer data structure
     const productForCart = {
-      ...product,
+      _id: product._id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
       farmer: product.farmer || {
         _id: product.farmerId || null,
         name: product.farmerName || 'Unknown Farmer',
@@ -99,10 +102,13 @@ export default function ProductDetailPage() {
       alert('Requested quantity exceeds available stock')
       return
     }
-
+    
     // Ensure product has proper farmer data structure
     const productForCart = {
-      ...product,
+      _id: product._id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
       farmer: product.farmer || {
         _id: product.farmerId || null,
         name: product.farmerName || 'Unknown Farmer',

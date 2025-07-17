@@ -55,8 +55,8 @@ export default function FarmerDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const [statsRes, ordersRes, productsRes] = await Promise.all([
-        fetch('/api/farmer/stats', {
+      const [analyticsRes, ordersRes, productsRes] = await Promise.all([
+        fetch('/api/farmer/analytics', {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         }),
         fetch('/api/orders?limit=5', {
@@ -67,9 +67,10 @@ export default function FarmerDashboard() {
         })
       ])
 
-      if (statsRes.ok) {
-        const statsData = await statsRes.json()
-        setStats(statsData.stats)
+      if (analyticsRes.ok) {
+        const analyticsData = await analyticsRes.json()
+        // Use analyticsData.analytics.overview for stats
+        setStats(analyticsData.analytics.overview)
       }
 
       if (ordersRes.ok) {

@@ -54,12 +54,13 @@ export default function FarmerOrdersPage() {
   const [stats, setStats] = useState({})
 
   useEffect(() => {
+    alert("hi")
     if (!isAuthenticated) {
       router.push('/login')
       return
     }
-
     if (user?.role !== 'farmer') {
+      console.log('User role:', user?.role)
       router.push('/')
       return
     }

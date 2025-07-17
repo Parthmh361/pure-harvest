@@ -126,6 +126,7 @@ export async function POST(request) {
 
     await connectDB()
 
+    // Properly destructure and validate the body
     const body = await request.json()
     const {
       items,
@@ -135,7 +136,6 @@ export async function POST(request) {
       deliveryDate
     } = body
 
-    // Validate required fields
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
         { error: 'Order items are required' },
@@ -155,12 +155,9 @@ export async function POST(request) {
     if (!address) {
       return NextResponse.json({ error: 'Address is required' }, { status: 400 })
     }
-    // Map to required field for Mongoose
     shippingAddress.address = address
-    // Optionally remove street to avoid confusion
-    // delete shippingAddress.street
 
-    // Process and validate items
+    // Process items and always set farmer from DB
     const processedItems = []
     let subtotal = 0
 
@@ -172,9 +169,8 @@ export async function POST(request) {
         )
       }
 
-      const product = await Product.findById(item.productId)
-        .populate('farmer', 'name email')
-      
+      // Fetch product and its farmer
+      const product = await Product.findById(item.productId).populate('farmer', '_id name email')
       if (!product) {
         return NextResponse.json(
           { error: `Product not found: ${item.productId}` },
@@ -194,24 +190,20 @@ export async function POST(request) {
 
       processedItems.push({
         product: product._id,
-        quantity: item.quantity
+        quantity: item.quantity,
+        price: product.price,
+        farmer: product.farmer._id 
       })
-
-      // Update product stock
       await Product.findByIdAndUpdate(
         product._id,
         { $inc: { stock: -item.quantity } }
       )
     }
 
-    // Calculate totals
     const deliveryFee = subtotal > 500 ? 0 : 50
     const totalAmount = subtotal + deliveryFee
-
-    // Generate order number
     const orderNumber = generateOrderNumber()
 
-    // Create order
     const orderData = {
       orderNumber,
       buyer: user.id,

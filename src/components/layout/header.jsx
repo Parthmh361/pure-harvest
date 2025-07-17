@@ -215,9 +215,9 @@ const Header = () => {
             <Link href="/products" className="text-gray-700 hover:text-green-600 transition-colors">
               Products
             </Link>
-            <Link href="/farmers" className="text-gray-700 hover:text-green-600 transition-colors">
+            {/* <Link href="/farmers" className="text-gray-700 hover:text-green-600 transition-colors">
               Farmers
-            </Link>
+            </Link> */}
             <Link href="/about" className="text-gray-700 hover:text-green-600 transition-colors">
               About
             </Link>
@@ -366,13 +366,13 @@ const Header = () => {
               >
                 Products
               </Link>
-              <Link
+              {/* <Link
                 href="/farmers"
                 className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Farmers
-              </Link>
+              </Link> */}
               <Link
                 href="/about"
                 className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
