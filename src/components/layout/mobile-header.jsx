@@ -142,12 +142,12 @@ export default function MobileHeader() {
         label: 'Payment Methods',
         description: 'Manage payments'
       },
-      {
-        href: '/notifications',
-        icon: Bell,
-        label: 'Notifications',
-        description: 'View all notifications'
-      },
+      // {
+      //   href: '/notifications',
+      //   icon: Bell,
+      //   label: 'Notifications',
+      //   description: 'View all notifications'
+      // },
       {
         href: '/profile',
         icon: UserCircle,

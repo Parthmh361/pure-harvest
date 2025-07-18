@@ -22,11 +22,13 @@ import {
 } from 'lucide-react'
 import NotificationBell from '@/components/notifications/notification-bell-simple'
 import LogoutButton from '../auth/logout-button'
+import useCartStore from '@/stores/cart-store'
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [user, setUser] = useState(null)
-  const [cartCount, setCartCount] = useState(0)
+  const items = useCartStore(state => state.cart)
+  const cartCount = (items || []).reduce((total, item) => total + (item.quantity || 0), 0)
   const router = useRouter()
 
   useEffect(() => {
@@ -38,18 +40,6 @@ const Header = () => {
       } catch (error) {
         console.error('Error parsing user data:', error)
         localStorage.removeItem('user')
-      }
-    }
-
-    // Get cart count
-    const cartData = localStorage.getItem('cart')
-    if (cartData) {
-      try {
-        const cart = JSON.parse(cartData)
-        const count = cart.reduce((total, item) => total + (item.quantity || 0), 0)
-        setCartCount(count)
-      } catch (error) {
-        console.error('Error parsing cart data:', error)
       }
     }
   }, [])
@@ -73,12 +63,12 @@ const Header = () => {
         label: 'My Orders',
         description: 'Track your orders'
       },
-      {
-        href: '/notifications',
-        icon: Bell,
-        label: 'Notifications',
-        description: 'View all notifications'
-      }
+      // {
+      //   href: '/notifications',
+      //   icon: Bell,
+      //   label: 'Notifications',
+      //   description: 'View all notifications'
+      // }
     ]
 
     const roleSpecificLinks = {
@@ -95,12 +85,12 @@ const Header = () => {
           label: 'Shopping Cart',
           description: 'View cart items'
         },
-        {
-          href: '/orders',
-          icon: Package,
-          label: 'My Orders',
-          description: 'Track your orders'
-        },
+        // {
+        //   href: '/orders',
+        //   icon: Package,
+        //   label: 'My Orders',
+        //   description: 'Track your orders'
+        // },
         {
           href: '/wishlist',
           icon: Heart,
@@ -113,18 +103,18 @@ const Header = () => {
           label: 'Payment Methods',
           description: 'Manage payments'
         },
-        {
-          href: '/notifications',
-          icon: Bell,
-          label: 'Notifications',
-          description: 'View all notifications'
-        },
-        {
-          href: '/profile',
-          icon: UserCircle,
-          label: 'Profile',
-          description: 'Manage your account'
-        }
+        // {
+        //   href: '/notifications',
+        //   icon: Bell,
+        //   label: 'Notifications',
+        //   description: 'View all notifications'
+        // },
+        // {
+        //   href: '/profile',
+        //   icon: UserCircle,
+        //   label: 'Profile',
+        //   description: 'Manage your account'
+        // }
       ],
       farmer: [
         {

@@ -8,11 +8,11 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Star, MapPin, Calendar } from 'lucide-react'
-
+import useAuthStore from '@/stores/auth-store'
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState([])
   const [loading, setLoading] = useState(true)
-
+  const {user, isAuthenticated} = useAuthStore()
   useEffect(() => {
     fetchFeaturedProducts()
   }, [])
@@ -47,9 +47,13 @@ export default function HomePage() {
             <Button size="lg" className="bg-white text-green-600 hover:bg-gray-100">
               <Link href="/products">Shop Now</Link>
             </Button>
+          {!user && !isAuthenticated && (
             <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-green-600">
               <Link href="/signup?role=farmer">Become a Farmer</Link>
             </Button>
+          )}
+
+
           </div>
         </div>
       </section>

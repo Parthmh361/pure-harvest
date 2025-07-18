@@ -61,12 +61,12 @@ const buyerSidebarLinks = [
     label: 'Payment Methods',
     description: 'Manage payments'
   },
-  {
-    href: '/notifications',
-    icon: Bell,
-    label: 'Notifications',
-    description: 'View all notifications'
-  },
+  // {
+  //   href: '/notifications',
+  //   icon: Bell,
+  //   label: 'Notifications',
+  //   description: 'View all notifications'
+  // },
   {
     href: '/profile',
     icon: User,
@@ -143,7 +143,7 @@ export default function MobileLayout({ children }) {
     { href: '/', icon: Home, label: 'Home', active: pathname === '/' },
     { href: '/products', icon: Search, label: 'Browse', active: pathname.startsWith('/products') },
     { href: '/cart', icon: ShoppingCart, label: 'Cart', active: pathname === '/cart', badge: cartItemCount },
-    { href: '/chat', icon: MessageSquare, label: 'Chat', active: pathname === '/chat' },
+    // { href: '/chat', icon: MessageSquare, label: 'Chat', active: pathname === '/chat' },
     { href: '/profile', icon: User, label: 'Profile', active: pathname === '/profile' }
   ]
 
