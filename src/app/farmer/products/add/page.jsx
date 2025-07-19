@@ -36,7 +36,6 @@ export default function AddProductPage() {
     name: '',
     description: '',
     category: '',
-    price: '',
     unit: 'kg',
     quantity: '',
     minimumOrder: '1',
@@ -143,7 +142,6 @@ export default function AddProductPage() {
     if (!formData.name.trim()) newErrors.name = 'Product name is required'
     if (!formData.description.trim()) newErrors.description = 'Description is required'
     if (!formData.category) newErrors.category = 'Category is required'
-    if (!formData.price || parseFloat(formData.price) <= 0) newErrors.price = 'Valid price is required'
     if (!formData.quantity || parseInt(formData.quantity) <= 0) newErrors.quantity = 'Valid quantity is required'
     if (!formData.minimumOrder || parseInt(formData.minimumOrder) <= 0) newErrors.minimumOrder = 'Valid minimum order is required'
     if (formData.images.length === 0) newErrors.images = 'At least one product image is required'
@@ -164,7 +162,6 @@ export default function AddProductPage() {
     try {
       const productData = {
         ...formData,
-        price: parseFloat(formData.price),
         quantity: parseInt(formData.quantity),
         minimumOrder: parseInt(formData.minimumOrder),
         shelfLife: formData.shelfLife ? parseInt(formData.shelfLife) : null
@@ -300,7 +297,7 @@ export default function AddProductPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
+                {/* <div>
                   <Label htmlFor="price">Price per Unit *</Label>
                   <div className="relative">
                     <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -316,7 +313,7 @@ export default function AddProductPage() {
                     />
                   </div>
                   {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
-                </div>
+                </div> */}
 
                 <div>
                   <Label htmlFor="unit">Unit *</Label>

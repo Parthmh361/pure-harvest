@@ -18,10 +18,13 @@ import {
   Camera,
   Save,
   ArrowLeft,
-  Loader2
+  Loader2,
+  CheckCircle,
+  XCircle,
+  Badge
 } from 'lucide-react'
 import useAuthStore from '@/stores/auth-store'
-import { PRODUCT_CATEGORIES, PRODUCT_UNITS } from '@/lib/utils'
+import { PRODUCT_CATEGORIES, PRODUCT_UNITS } from '@/lib/constants' // <-- Fix import if needed
 import Image from 'next/image'
 
 export default function EditProductPage() {
@@ -32,6 +35,8 @@ export default function EditProductPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [imageUploading, setImageUploading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [approving, setApproving] = useState(false)
   
   // Form state
   const [formData, setFormData] = useState({
@@ -51,6 +56,7 @@ export default function EditProductPage() {
   })
 
   const [errors, setErrors] = useState({})
+  const [categories, setCategories] = useState([])
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -58,15 +64,26 @@ export default function EditProductPage() {
       return
     }
 
-    if (user && user.role !== 'farmer') {
-      router.push('/')
+    if (user && user.role !== 'admin') {
+      router.push('/admin/products')
       return
     }
 
+    fetchCategories() // <-- Fetch categories
     if (params.id) {
       fetchProduct()
     }
   }, [isAuthenticated, user, router, params.id])
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/products/categories')
+      const data = await response.json()
+      setCategories(data.categories || PRODUCT_CATEGORIES)
+    } catch (error) {
+      setCategories(PRODUCT_CATEGORIES)
+    }
+  }
 
   const fetchProduct = async () => {
     try {
@@ -80,18 +97,13 @@ export default function EditProductPage() {
 
       if (response.ok) {
         const product = data.product
-        
-        // Check if user owns this product
-        if (product.farmer._id !== user.id) {
-          alert('You can only edit your own products')
-          router.push('/farmer/products')
-          return
-        }
-
+        // alert(product.category)
         setFormData({
           name: product.name || '',
           description: product.description || '',
-          category: product.category || '',
+          category: typeof product.category === "string"
+            ? product.category.toLowerCase()
+            : product.category?.name?.toLowerCase() || '',
           price: product.price?.toString() || '',
           unit: product.unit || 'kg',
           quantity: product.quantity?.toString() || '',
@@ -105,12 +117,12 @@ export default function EditProductPage() {
         })
       } else {
         alert(data.error || 'Failed to fetch product')
-        router.push('/farmer/products')
+        router.push('/admin/products')
       }
     } catch (error) {
       console.error('Product fetch error:', error)
       alert('Failed to fetch product')
-      router.push('/farmer/products')
+      router.push('/admin/products')
     } finally {
       setLoading(false)
     }
@@ -201,10 +213,7 @@ export default function EditProductPage() {
     if (!formData.name.trim()) newErrors.name = 'Product name is required'
     if (!formData.description.trim()) newErrors.description = 'Description is required'
     if (!formData.category) newErrors.category = 'Category is required'
-    // Only require price for admin
-    if (user?.role === 'admin') {
-      if (!formData.price || parseFloat(formData.price) <= 0) newErrors.price = 'Valid price is required'
-    }
+    if (!formData.price || parseFloat(formData.price) <= 0) newErrors.price = 'Valid price is required'
     if (!formData.quantity || parseInt(formData.quantity) < 0) newErrors.quantity = 'Valid quantity is required'
     if (!formData.minimumOrder || parseInt(formData.minimumOrder) <= 0) newErrors.minimumOrder = 'Valid minimum order is required'
     if (formData.images.length === 0) newErrors.images = 'At least one product image is required'
@@ -225,7 +234,7 @@ export default function EditProductPage() {
     try {
       const productData = {
         ...formData,
-        price: user?.role === 'admin' ? parseFloat(formData.price) : 0, // Set price to 0 for farmers
+        price: parseFloat(formData.price),
         quantity: parseInt(formData.quantity),
         minimumOrder: parseInt(formData.minimumOrder),
         shelfLife: formData.shelfLife ? parseInt(formData.shelfLife) : null
@@ -244,7 +253,7 @@ export default function EditProductPage() {
 
       if (response.ok) {
         alert('Product updated successfully!')
-        router.push('/farmer/products')
+        router.push('/admin/products')
       } else {
         alert(data.error || 'Failed to update product')
       }
@@ -256,16 +265,70 @@ export default function EditProductPage() {
     }
   }
 
-  if (!isAuthenticated || (user && user.role !== 'farmer')) {
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this product?')) return
+    setDeleting(true)
+    try {
+      const response = await fetch(`/api/admin/products`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ productId: params.id })
+      })
+      const data = await response.json()
+      if (response.ok) {
+        alert('Product deleted successfully!')
+        router.push('/admin/products')
+      } else {
+        alert(data.error || 'Failed to delete product')
+      }
+    } catch (error) {
+      console.error('Product delete error:', error)
+      alert('Failed to delete product. Please try again.')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const handleApprove = async (active) => {
+    setApproving(true)
+    try {
+      const response = await fetch(`/api/admin/products`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ productId: params.id, isActive: active })
+      })
+      const data = await response.json()
+      if (response.ok) {
+        setFormData(prev => ({ ...prev, isActive: active }))
+        alert(active ? 'Product activated!' : 'Product deactivated!')
+      } else {
+        alert(data.error || 'Failed to update product status')
+      }
+    } catch (error) {
+      console.error('Product status error:', error)
+      alert('Failed to update product status. Please try again.')
+    } finally {
+      setApproving(false)
+    }
+  }
+
+
+  if (!isAuthenticated || (user && user.role !== 'admin')) {
     return (
       <Layout>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <Package className="h-16 w-16 mx-auto text-gray-300 mb-4" />
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
-            <p className="text-gray-600 mb-6">Only farmers can edit products.</p>
+            <p className="text-gray-600 mb-6">Only admins can edit products.</p>
             <Button onClick={() => router.push('/login')}>
-              Login as Farmer
+              Login
             </Button>
           </div>
         </div>
@@ -275,7 +338,7 @@ export default function EditProductPage() {
 
   if (loading) {
     return (
-      <Layout requireAuth allowedRoles={['farmer']}>
+      <Layout requireAuth allowedRoles={['admin']}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin" />
@@ -287,13 +350,13 @@ export default function EditProductPage() {
   }
 
   return (
-    <Layout requireAuth allowedRoles={['farmer']}>
+    <Layout requireAuth allowedRoles={['admin']}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex items-center mb-8">
           <Button 
             variant="ghost" 
-            onClick={() => router.push('/farmer/products')}
+            onClick={() => router.push('/admin/products')}
             className="mr-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -301,7 +364,7 @@ export default function EditProductPage() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Edit Product</h1>
-            <p className="text-gray-600">Update your product details</p>
+            <p className="text-gray-600">View and update product details</p>
           </div>
         </div>
 
@@ -313,14 +376,31 @@ export default function EditProductPage() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="isActive"
-                  checked={formData.isActive}
-                  onChange={(e) => handleInputChange('isActive', e.target.checked)}
-                  className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
-                />
-                <Label htmlFor="isActive">Product is active and visible to buyers</Label>
+                <Badge className={formData.isActive ? "bg-green-600" : "bg-yellow-600"}>
+                  {formData.isActive ? "Active" : "Inactive"}
+                </Badge>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={formData.isActive ? "outline" : "default"}
+                  onClick={() => handleApprove(!formData.isActive)}
+                  disabled={approving}
+                  className="ml-2"
+                >
+                  {approving ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : formData.isActive ? (
+                    <>
+                      <XCircle className="h-4 w-4 mr-1" />
+                      Deactivate
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                      Activate
+                    </>
+                  )}
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -358,9 +438,11 @@ export default function EditProductPage() {
                     }`}
                   >
                     <option value="">Select Category</option>
-                    {(PRODUCT_CATEGORIES || []).map(category => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
+                    {(categories.length ? categories : PRODUCT_CATEGORIES).map(category =>
+                      typeof category === "string"
+                        ? <option key={category} value={category.toLowerCase()}>{category}</option>
+                        : <option key={category.name} value={category.name.toLowerCase()}>{category.name}</option>
+                    )}
                   </select>
                   {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
                 </div>
@@ -391,26 +473,23 @@ export default function EditProductPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Show price input only for admin */}
-                {user?.role === 'admin' && (
-                  <div>
-                    <Label htmlFor="price">Price per Unit *</Label>
-                    <div className="relative">
-                      <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="price"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={formData.price}
-                        onChange={(e) => handleInputChange('price', e.target.value)}
-                        placeholder="0.00"
-                        className={`pl-10 ${errors.price ? 'border-red-500' : ''}`}
-                      />
-                    </div>
-                    {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
+                <div>
+                  <Label htmlFor="price">Price per Unit *</Label>
+                  <div className="relative">
+                    <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.price}
+                      onChange={(e) => handleInputChange('price', e.target.value)}
+                      placeholder="0.00"
+                      className={`pl-10 ${errors.price ? 'border-red-500' : ''}`}
+                    />
                   </div>
-                )}
+                  {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
+                </div>
 
                 <div>
                   <Label htmlFor="unit">Unit *</Label>
@@ -590,12 +669,12 @@ export default function EditProductPage() {
             </CardContent>
           </Card>
 
-          {/* Submit Buttons */}
+          {/* Submit & Delete Buttons */}
           <div className="flex items-center justify-end space-x-4">
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push('/farmer/products')}
+              onClick={() => router.push('/admin/products')}
               disabled={saving}
             >
               Cancel
@@ -614,6 +693,24 @@ export default function EditProductPage() {
                 <>
                   <Save className="h-4 w-4 mr-2" />
                   Update Product
+                </>
+              )}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <div className="flex items-center">
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Deleting...
+                </div>
+              ) : (
+                <>
+                  <X className="h-4 w-4 mr-2" />
+                  Delete Product
                 </>
               )}
             </Button>

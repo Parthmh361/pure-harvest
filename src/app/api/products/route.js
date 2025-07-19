@@ -16,6 +16,9 @@ export async function GET(request) {
     const search = searchParams.get('search')
     const sortBy = searchParams.get('sortBy') || 'createdAt'
     const order = searchParams.get('order') || 'desc'
+    const minPrice = parseFloat(searchParams.get('minPrice')) || 0
+    const maxPrice = parseFloat(searchParams.get('maxPrice')) || 1000
+    const isOrganic = searchParams.get('isOrganic') === 'true'
 
     // Build query
     const query = { isActive: true }
@@ -31,13 +34,41 @@ export async function GET(request) {
       ]
     }
 
+    // Add price filter
+    query.price = { $gte: minPrice, $lte: maxPrice }
+
+    // Add organic filter
+    if (isOrganic) {
+      query.isOrganic = true
+    }
+
     // Calculate pagination
     const skip = (page - 1) * limit
+
+    let sortField = sortBy
+    let sortOrder = order === 'desc' ? -1 : 1
+
+    if (sortBy === 'price-low') {
+      sortField = 'price'
+      sortOrder = 1
+    } else if (sortBy === 'price-high') {
+      sortField = 'price'
+      sortOrder = -1
+    } else if (sortBy === 'rating') {
+      sortField = 'rating.average'
+      sortOrder = -1
+    } else if (sortBy === 'name') {
+      sortField = 'name'
+      sortOrder = 1
+    } else {
+      sortField = 'createdAt'
+      sortOrder = -1
+    }
 
     // Get products
     const products = await Product.find(query)
       .populate('farmer', 'name email')
-      .sort({ [sortBy]: order === 'desc' ? -1 : 1 })
+      .sort({ [sortField]: sortOrder })
       .skip(skip)
       .limit(limit)
       .lean()

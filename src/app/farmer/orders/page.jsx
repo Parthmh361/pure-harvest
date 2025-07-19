@@ -30,7 +30,8 @@ import {
   Phone,
   MapPin,
   DollarSign,
-  AlertCircle
+  AlertCircle,
+  LucideIndianRupee
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -54,7 +55,6 @@ export default function FarmerOrdersPage() {
   const [stats, setStats] = useState({})
 
   useEffect(() => {
-    alert("hi")
     if (!isAuthenticated) {
       router.push('/login')
       return
@@ -243,7 +243,7 @@ export default function FarmerOrdersPage() {
                     <p className="text-sm font-medium text-gray-600">Total Revenue</p>
                     <p className="text-2xl font-bold">{formatCurrency(stats.totalRevenue || 0)}</p>
                   </div>
-                  <DollarSign className="h-8 w-8 text-green-600" />
+                  <LucideIndianRupee className="h-8 w-8 text-green-600" />
                 </div>
               </CardContent>
             </Card>
@@ -255,7 +255,7 @@ export default function FarmerOrdersPage() {
                     <p className="text-sm font-medium text-gray-600">Avg Order Value</p>
                     <p className="text-2xl font-bold">{formatCurrency(stats.avgOrderValue || 0)}</p>
                   </div>
-                  <DollarSign className="h-8 w-8 text-purple-600" />
+                  <LucideIndianRupee className="h-8 w-8 text-purple-600" />
                 </div>
               </CardContent>
             </Card>

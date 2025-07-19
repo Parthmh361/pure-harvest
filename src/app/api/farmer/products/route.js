@@ -18,8 +18,8 @@ export async function POST(request) {
     
     const productData = await request.json()
 
-    // Validate required fields
-    const requiredFields = ['name', 'description', 'category', 'price', 'quantity', 'unit']
+    // Validate required fields (remove 'price')
+    const requiredFields = ['name', 'description', 'category', 'quantity', 'unit']
     for (const field of requiredFields) {
       if (!productData[field]) {
         return NextResponse.json(
@@ -37,11 +37,14 @@ export async function POST(request) {
       )
     }
 
+    // Set price to zero
+    productData.price = 0
+
     // Create product
     const product = new Product({
       ...productData,
       farmer: user.id,
-      isActive: true
+      isActive: false
     })
 
     await product.save()

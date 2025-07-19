@@ -39,7 +39,7 @@ export default function ProductsPage() {
   useEffect(() => {
     fetchProducts()
     fetchCategories()
-  }, [currentPage, selectedCategory, sortBy, searchQuery, isOrganic])
+  }, [currentPage, selectedCategory, sortBy, searchQuery, isOrganic, priceRange])
 
   const fetchProducts = async () => {
     setLoading(true)
@@ -187,20 +187,30 @@ export default function ProductsPage() {
               <CardContent className="p-4">
                 <h3 className="font-semibold mb-4">Categories</h3>
                 <div className="space-y-2">
+                  {/* All Categories */}
                   <button
-                    onClick={() => setSelectedCategory('all')}
+                    onClick={() => {
+                      setSelectedCategory('all')
+                      setCurrentPage(1)
+                    }}
                     className={`block w-full text-left px-2 py-1 rounded ${
                       selectedCategory === 'all' ? 'bg-green-100 text-green-700' : 'hover:bg-gray-100'
                     }`}
                   >
                     All Categories
                   </button>
+
+                  {/* Individual Categories */}
                   {categories.map((category) => (
                     <button
                       key={category.name}
-                      onClick={() => setSelectedCategory(category.name)}
+                      onClick={() => {
+                        // Ensure category.name is lowercase and matches backend
+                        setSelectedCategory(category.name.toLowerCase())
+                        setCurrentPage(1)
+                      }}
                       className={`block w-full text-left px-2 py-1 rounded ${
-                        selectedCategory === category.name ? 'bg-green-100 text-green-700' : 'hover:bg-gray-100'
+                        selectedCategory === category.name.toLowerCase() ? 'bg-green-100 text-green-700' : 'hover:bg-gray-100'
                       }`}
                     >
                       <div className="flex items-center justify-between">

@@ -97,26 +97,26 @@ export default function FarmerProductsPage() {
     }
   }
 
-  const toggleProductStatus = async (productId, currentStatus) => {
-    try {
-      const response = await fetch(`/api/products/${productId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          isActive: !currentStatus
-        })
-      })
+  // const toggleProductStatus = async (productId, currentStatus) => {
+  //   try {
+  //     const response = await fetch(`/api/products/${productId}`, {
+  //       method: 'PATCH',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': `Bearer ${localStorage.getItem('token')}`
+  //       },
+  //       body: JSON.stringify({
+  //         isActive: !currentStatus
+  //       })
+  //     })
 
-      if (response.ok) {
-        fetchProducts() // Refresh products
-      }
-    } catch (error) {
-      console.error('Error toggling product status:', error)
-    }
-  }
+  //     if (response.ok) {
+  //       fetchProducts() // Refresh products
+  //     }
+  //   } catch (error) {
+  //     console.error('Error toggling product status:', error)
+  //   }
+  // }
 
   const deleteProduct = async (productId) => {
     try {
@@ -158,7 +158,7 @@ export default function FarmerProductsPage() {
               </p>
             </div>
             <Button asChild>
-              <Link href="/farmer/products/new">
+              <Link href="/farmer/products/add">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Product
               </Link>
@@ -332,7 +332,7 @@ export default function FarmerProductsPage() {
                             </Link>
                           </Button>
                           
-                          <Button
+                          {/* <Button
                             variant="outline"
                             size="sm"
                             onClick={() => toggleProductStatus(product._id, product.isActive)}
@@ -342,7 +342,7 @@ export default function FarmerProductsPage() {
                             ) : (
                               <ToggleLeft className="h-4 w-4 text-gray-400" />
                             )}
-                          </Button>
+                          </Button> */}
 
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
