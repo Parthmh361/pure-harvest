@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import connectDB from '@/lib/mongodb'
 import Product from '@/models/product'
 import { requireAuth } from '@/lib/auth'
+import User from '@/models/user'
+import NotificationService from '@/lib/notification-service'
 
 // Create new product
 export async function POST(request) {
@@ -18,7 +20,6 @@ export async function POST(request) {
     
     const productData = await request.json()
 
-    // Validate required fields (remove 'price')
     const requiredFields = ['name', 'description', 'category', 'quantity', 'unit']
     for (const field of requiredFields) {
       if (!productData[field]) {
@@ -48,6 +49,19 @@ export async function POST(request) {
     })
 
     await product.save()
+
+    // Notify all admins when a new product is added
+    const admins = await User.find({ role: 'admin', isActive: true }).select('_id')
+    for (const admin of admins) {
+      await NotificationService.create({
+        recipientId: admin._id,
+        type: 'product_created',
+        title: 'New Product Added',
+        message: `A new product "${product.name}" has been added.`,
+        data: { productId: product._id, productName: product.name },
+        channels: { inApp: true, email: true }
+      })
+    }
 
     // Populate farmer data for response
     await product.populate('farmer', 'name businessName phone email')

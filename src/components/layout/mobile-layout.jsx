@@ -137,13 +137,11 @@ export default function MobileLayout({ children }) {
     setIsDrawerOpen(false)
   }
 
-
-
+  // Update navigationItems for bottom nav (remove cart, add notification)
   const navigationItems = [
     { href: '/', icon: Home, label: 'Home', active: pathname === '/' },
     { href: '/products', icon: Search, label: 'Browse', active: pathname.startsWith('/products') },
-    { href: '/cart', icon: ShoppingCart, label: 'Cart', active: pathname === '/cart', badge: cartItemCount },
-    // { href: '/chat', icon: MessageSquare, label: 'Chat', active: pathname === '/chat' },
+    // { href: '/notifications', icon: Bell, label: 'Notify', active: pathname === '/notifications' },
     { href: '/profile', icon: User, label: 'Profile', active: pathname === '/profile' }
   ]
 
@@ -156,8 +154,9 @@ export default function MobileLayout({ children }) {
     ],
     admin: [
       { href: '/admin', icon: Settings, label: 'Admin Panel' },
-      { href: '/admin/users', icon: User, label: 'Users' },
-      { href: '/admin/products', icon: Package, label: 'Products' },
+      { href: '/admin/orders', icon: Package, label: 'All Orders' }, // <-- Add this
+      { href: '/admin/products', icon: Package, label: 'Manage Products' }, // <-- Change label
+      { href: '/admin/users', icon: User, label: 'Manage Users' }, // <-- Change label
     ],
     buyer: [
       { href: '/buyer', icon: Package, label: 'Dashboard', description: 'Buyer dashboard' },
@@ -177,7 +176,7 @@ export default function MobileLayout({ children }) {
     <div className="min-h-screen bg-gray-50">
       {/* Mobile Header */}
       <header className="header-responsive">
-        <div className="header-content">
+        <div className="header-content flex items-center justify-between px-4 py-2">
           <div className="flex items-center space-x-3">
             <Button
               variant="ghost"
@@ -192,9 +191,7 @@ export default function MobileLayout({ children }) {
               Pure Harvest
             </Link>
           </div>
-
-          <div className="flex items-center space-x-2">
-            {/* Search Toggle */}
+          <div className="flex items-center space-x-2 flex-shrink-0">
             <Button
               variant="ghost"
               size="sm"
@@ -203,24 +200,12 @@ export default function MobileLayout({ children }) {
             >
               <Search className="h-5 w-5" />
             </Button>
-
-            {/* Notifications - only on sm+ */}
-            {isAuthenticated && !isSmallScreen && (
-              <NotificationBell />
+            {/* Notifications - always show for authenticated users */}
+            {isAuthenticated && (
+              <div className="relative flex-shrink-0 w-8 h-8 flex items-center justify-center">
+                <NotificationBell user={user} />
+              </div>
             )}
-            
-            {/* Cart */}
-            <Link href="/cart" className="relative p-2">
-              <ShoppingCart className="h-5 w-5" />
-              {cartItemCount > 0 && (
-                <Badge 
-                  variant="destructive" 
-                  className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-xs"
-                >
-                  {cartItemCount > 9 ? '9+' : cartItemCount}
-                </Badge>
-              )}
-            </Link>
           </div>
         </div>
 
@@ -421,13 +406,9 @@ export default function MobileLayout({ children }) {
               >
                 <div className="relative">
                   <item.icon className="h-5 w-5 mb-1" />
-                  {item.badge > 0 && (
-                    <Badge 
-                      variant="destructive" 
-                      className="absolute -top-2 -right-2 h-4 w-4 flex items-center justify-center p-0 text-xs"
-                    >
-                      {item.badge > 9 ? '9+' : item.badge}
-                    </Badge>
+                  {/* Optionally show badge for notifications */}
+                  {item.label === "Notify" && isAuthenticated && (
+                    <NotificationBell user={user} showBadgeOnly />
                   )}
                 </div>
                 <span className="text-xs font-medium truncate">

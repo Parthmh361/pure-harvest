@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import connectDB from '@/lib/mongodb'
 import Product from '@/models/product'
 import { requireAuth } from '@/lib/auth'
+import NotificationService from '@/lib/notification-service' // Adjust the import based on your project structure
 
 // GET: List all products (with filters)
 export async function GET(request) {
@@ -74,6 +75,19 @@ export async function PATCH(request) {
     if (!product) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     product.isActive = isActive
     await product.save()
+
+    // Notify farmer when product is activated by admin
+    if (isActive) {
+      await NotificationService.create({
+        recipientId: product.farmer,
+        type: 'product_activated',
+        title: 'Product Activated',
+        message: `Your product "${product.name}" has been activated by admin.`,
+        data: { productId: product._id, productName: product.name },
+        channels: { inApp: true, email: true }
+      })
+    }
+
     return NextResponse.json({ success: true, product })
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })

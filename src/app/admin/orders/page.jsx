@@ -1,17 +1,9 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState } from "react"
 import Layout from "@/components/layout/layout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  useReactTable,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  flexRender,
-} from "@tanstack/react-table"
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([])
@@ -43,71 +35,6 @@ export default function AdminOrdersPage() {
     fetchOrders()
   }
 
-  const columns = useMemo(
-    () => [
-      {
-        accessorKey: "orderNumber",
-        header: "Order #",
-        cell: ({ row }) => (
-          <button
-            className="text-blue-600 underline"
-            onClick={() => setSelectedOrder(row.original)}
-          >
-            {row.original.orderNumber}
-          </button>
-        ),
-      },
-      {
-        accessorKey: "buyer.name",
-        header: "Buyer",
-        cell: ({ row }) => row.original.buyer?.name,
-      },
-      {
-        accessorKey: "status",
-        header: "Status",
-        cell: ({ row }) => (
-          <select
-            value={row.original.status}
-            onChange={(e) =>
-              handleStatusChange(row.original._id, e.target.value)
-            }
-            className="border px-2 py-1 rounded"
-          >
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        ),
-      },
-      {
-        accessorKey: "totalAmount",
-        header: "Total",
-        cell: ({ row }) => `₹${row.original.totalAmount}`,
-      },
-      {
-        accessorKey: "createdAt",
-        header: "Date",
-        cell: ({ row }) =>
-          new Date(row.original.createdAt).toLocaleDateString(),
-      },
-    ],
-    []
-  )
-
-  const table = useReactTable({
-    data: orders,
-    columns,
-    state: { globalFilter, pagination: { pageIndex } },
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
-    manualPagination: true,
-    pageCount,
-  })
-
   return (
     <Layout requireAuth allowedRoles={["admin"]}>
       <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4">
@@ -120,51 +47,57 @@ export default function AdminOrdersPage() {
             className="max-w-xs"
           />
         </div>
-        <div className="overflow-x-auto w-full rounded border bg-white">
-          <table className="min-w-full text-xs sm:text-sm border">
-            <thead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id} className="border-b">
-                  {headerGroup.headers.map((header) => (
-                    <th
-                      key={header.id}
-                      className="px-2 py-2 text-left font-semibold whitespace-nowrap border-r last:border-r-0"
-                    >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={columns.length} className="text-center py-8 border-b">
-                    Loading...
-                  </td>
-                </tr>
-              ) : table.getRowModel().rows.length === 0 ? (
-                <tr>
-                  <td colSpan={columns.length} className="text-center py-8 border-b">
-                    No orders found.
-                  </td>
-                </tr>
-              ) : (
-                table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50 border-b">
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-2 py-2 whitespace-nowrap border-r last:border-r-0">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        {/* Orders as cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {loading ? (
+            [...Array(6)].map((_, i) => (
+              <div key={i} className="bg-gray-100 rounded-lg p-6 animate-pulse h-48"></div>
+            ))
+          ) : orders.length === 0 ? (
+            <div className="col-span-full text-center py-8">No orders found.</div>
+          ) : (
+            orders
+              .filter(order =>
+                globalFilter
+                  ? order.orderNumber.toString().includes(globalFilter) ||
+                    order.buyer?.name?.toLowerCase().includes(globalFilter.toLowerCase())
+                  : true
+              )
+              .map((order) => (
+                <div
+                  key={order._id}
+                  className="bg-white rounded-lg shadow border p-6 cursor-pointer hover:shadow-lg transition"
+                  onClick={() => setSelectedOrder(order)}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="font-bold text-lg">Order #{order.orderNumber}</h2>
+                    <span className={`px-2 py-1 rounded text-xs ${order.status === "pending" ? "bg-yellow-100 text-yellow-800" : order.status === "confirmed" ? "bg-green-100 text-green-800" : order.status === "delivered" ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800"}`}>
+                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-700 mb-1">
+                    <b>Buyer:</b> {order.buyer?.name}
+                  </div>
+                  <div className="text-sm text-gray-700 mb-1">
+                    <b>Total:</b> ₹{typeof order.totalAmount === "number"
+  ? order.totalAmount
+  : (
+      (typeof order.subtotal === "number" ? order.subtotal : order.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0)
+      + (typeof order.deliveryFee === "number" ? order.deliveryFee : 0)
+    )
+}
+                  </div>
+                  <div className="text-sm text-gray-700 mb-1">
+                    <b>Date:</b> {new Date(order.createdAt).toLocaleDateString()}
+                  </div>
+                  <div className="mt-2">
+                    <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); }}>
+                      View Details
+                    </Button>
+                  </div>
+                </div>
+              ))
+          )}
         </div>
         {/* Pagination */}
         <div className="flex flex-col sm:flex-row gap-2 items-center justify-between mt-4">
@@ -191,7 +124,7 @@ export default function AdminOrdersPage() {
         {/* Order Detail Modal */}
         {selectedOrder && (
           <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full relative">
+            <div className="bg-white rounded-lg shadow-lg p-6 max-w-xl w-full relative overflow-y-auto max-h-[90vh]">
               <button
                 className="absolute top-2 right-2 text-gray-500"
                 onClick={() => setSelectedOrder(null)}
@@ -201,19 +134,102 @@ export default function AdminOrdersPage() {
               <h2 className="text-xl font-bold mb-2">
                 Order #{selectedOrder.orderNumber}
               </h2>
-              <p>
-                <b>Buyer:</b> {selectedOrder.buyer?.name}
-              </p>
-              <p>
+              <div className="mb-2">
                 <b>Status:</b> {selectedOrder.status}
-              </p>
-              <p>
-                <b>Total:</b> ₹{selectedOrder.totalAmount}
-              </p>
-              <p>
-                <b>Date:</b>{" "}
-                {new Date(selectedOrder.createdAt).toLocaleString()}
-              </p>
+              </div>
+              <div className="mb-2">
+                <b>Buyer:</b> {selectedOrder.buyer?.name} ({selectedOrder.buyer?.email})
+              </div>
+              <div className="mb-2">
+                <b>Shipping Address:</b>
+                <div className="ml-2">
+                  <div>{selectedOrder.shippingAddress.fullName}</div>
+                  <div>{selectedOrder.shippingAddress.phone}</div>
+                  <div>
+                    {selectedOrder.shippingAddress.street}, {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state} - {selectedOrder.shippingAddress.pincode}
+                  </div>
+                  {selectedOrder.shippingAddress.landmark && (
+                    <div>Landmark: {selectedOrder.shippingAddress.landmark}</div>
+                  )}
+                </div>
+              </div>
+              <div className="mb-2">
+                <b>Payment Method:</b> {selectedOrder.paymentMethod}
+              </div>
+              <div className="mb-2">
+                <b>Subtotal:</b> ₹{typeof selectedOrder.subtotal === "number" ? selectedOrder.subtotal : selectedOrder.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0}
+              </div>
+              <div className="mb-2">
+                <b>Delivery Fee:</b> ₹{typeof selectedOrder.deliveryFee === "number" ? selectedOrder.deliveryFee : 0}
+              </div>
+              <div className="mb-2">
+                <b>Total Amount:</b> ₹{typeof selectedOrder.totalAmount === "number"
+                  ? selectedOrder.totalAmount
+                  : (
+                      (typeof selectedOrder.subtotal === "number" ? selectedOrder.subtotal : selectedOrder.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0)
+                      + (typeof selectedOrder.deliveryFee === "number" ? selectedOrder.deliveryFee : 0)
+                    )
+                }
+              </div>
+              <div className="mb-2">
+                <b>Order Date:</b> {new Date(selectedOrder.createdAt).toLocaleString()}
+              </div>
+              <div className="mb-2">
+                <b>Delivery Date:</b> {selectedOrder.deliveryDate ? new Date(selectedOrder.deliveryDate).toLocaleDateString() : "N/A"}
+              </div>
+              <div className="mb-2">
+                <b>Notes:</b> {selectedOrder.notes || "None"}
+              </div>
+              <div className="mb-4">
+                <b>Items:</b>
+                <ul className="list-disc ml-6 mt-2">
+                  {selectedOrder.items?.map((item, idx) => (
+                    <li key={idx}>
+                      <div>
+                        <span className="font-semibold">{item.product?.name || "Product"}</span>
+                        {" - "}
+                        {item.quantity} {item.unit || ""}
+                        {" @ ₹"}
+                        {item.price} each
+                        {" | Total: ₹"}
+                        {item.price * item.quantity}
+                        {item.product?.farmer && (
+                          <span className="ml-2 text-xs text-gray-500">
+                            (Farmer: {item.product.farmer.businessName || item.product.farmer.name})
+                          </span>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mb-4">
+                <b>Change Status:</b>
+                <select
+                  className="ml-2 border rounded px-2 py-1"
+                  value={selectedOrder.status}
+                  onChange={async (e) => {
+                    await handleStatusChange(selectedOrder._id, e.target.value)
+                    setSelectedOrder({ ...selectedOrder, status: e.target.value })
+                  }}
+                >
+                  <option value="pending">Pending</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+              {selectedOrder.status === "pending" && (
+                <Button
+                  className="mt-4"
+                  onClick={async () => {
+                    await handleStatusChange(selectedOrder._id, "confirmed")
+                    setSelectedOrder(null)
+                  }}
+                >
+                  Confirm Order
+                </Button>
+              )}
               <div className="mt-4">
                 <Button onClick={() => setSelectedOrder(null)}>Close</Button>
               </div>

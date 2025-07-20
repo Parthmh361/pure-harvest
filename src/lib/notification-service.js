@@ -8,7 +8,7 @@ class NotificationService {
     recipientId,
     type,
     title,
-    message, // Make sure this is always provided
+    message,
     data = {},
     channels = { inApp: true, email: false, sms: false },
     actionUrl = null
@@ -16,53 +16,40 @@ class NotificationService {
     try {
       await connectDB()
 
-      // Ensure message is provided
       if (!message || message.trim() === '') {
         throw new Error('Message is required for notification')
       }
 
-      // Get recipient user
       const recipient = await User.findById(recipientId)
       if (!recipient) {
         throw new Error('Recipient not found')
       }
 
-      // Check user notification preferences
-      const userChannels = this.applyUserPreferences(recipient, channels)
-
-      // Create notification
-      const notification = new Notification({
-        recipient: recipientId,
-        title: title || 'New Notification',
-        message: message.trim(),
+      // DEBUG: Log notification payload
+      console.log('🔔 Creating notification with:', {
+        user: recipientId,
         type,
+        title,
+        message,
         data,
-        actionUrl,
-        channels: userChannels,
-        read: false,
-        createdAt: new Date()
+        channels,
+        actionUrl
       })
 
-      const savedNotification = await notification.save()
-      console.log('✅ Notification created:', savedNotification._id)
-
-      // Send via different channels
-      if (userChannels.inApp) {
-        await this.sendInApp(notification)
-      }
-
-      if (userChannels.email) {
-        await this.sendEmail(notification, recipient)
-      }
-
-      if (userChannels.sms) {
-        await this.sendSMS(notification, recipient)
-      }
-
-      return savedNotification
-
+      // Actually create the notification
+      const notification = new Notification({
+        user: recipientId, // <-- must match your schema!
+        type,
+        title,
+        message,
+        data,
+        channels,
+        actionUrl
+      })
+      await notification.save()
+      return notification
     } catch (error) {
-      console.error('Notification creation error:', error)
+      console.error('❌ Notification creation error:', error)
       throw error
     }
   }
@@ -221,7 +208,7 @@ class NotificationService {
       await Notification.updateMany(
         {
           _id: { $in: notificationIds },
-          recipient: userId,
+          user: userId, // <-- fix here
           isRead: false
         },
         {
@@ -242,7 +229,7 @@ class NotificationService {
     try {
       await connectDB()
 
-      const filter = { recipient: userId }
+      const filter = { user: userId } // <-- fix here
       if (unreadOnly) {
         filter.isRead = false
       }
@@ -256,7 +243,7 @@ class NotificationService {
           .limit(limit)
           .lean(),
         Notification.countDocuments(filter),
-        Notification.countDocuments({ recipient: userId, isRead: false })
+        Notification.countDocuments({ user: userId, isRead: false }) // <-- fix here
       ])
 
       return {
@@ -407,7 +394,7 @@ class NotificationService {
       await Notification.updateMany(
         {
           _id: { $in: notificationIds },
-          recipient: userId,
+          user: userId, // <-- fix here
           isRead: false
         },
         {
@@ -428,7 +415,7 @@ class NotificationService {
     try {
       await connectDB()
 
-      const filter = { recipient: userId }
+      const filter = { user: userId } // <-- fix here
       if (unreadOnly) {
         filter.isRead = false
       }
@@ -442,7 +429,7 @@ class NotificationService {
           .limit(limit)
           .lean(),
         Notification.countDocuments(filter),
-        Notification.countDocuments({ recipient: userId, isRead: false })
+        Notification.countDocuments({ user: userId, isRead: false }) // <-- fix here
       ])
 
       return {
@@ -545,7 +532,7 @@ class NotificationService {
       await connectDB()
       
       await Notification.updateMany(
-        { recipient: userId, isRead: false },
+        { user: userId, isRead: false }, // <-- fix here
         { isRead: true, readAt: new Date() }
       )
 
@@ -562,7 +549,7 @@ class NotificationService {
       
       await Notification.findOneAndDelete({
         _id: notificationId,
-        recipient: userId
+        user: userId // <-- fix here
       })
 
       return true
