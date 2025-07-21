@@ -124,85 +124,136 @@ export default function AdminOrdersPage() {
         {/* Order Detail Modal */}
         {selectedOrder && (
           <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-lg p-6 max-w-xl w-full relative overflow-y-auto max-h-[90vh]">
+            <div className="bg-white rounded-lg shadow-lg p-6 max-w-3xl w-full relative overflow-y-auto max-h-[90vh]">
               <button
                 className="absolute top-2 right-2 text-gray-500"
                 onClick={() => setSelectedOrder(null)}
               >
                 ✕
               </button>
-              <h2 className="text-xl font-bold mb-2">
-                Order #{selectedOrder.orderNumber}
-              </h2>
-              <div className="mb-2">
-                <b>Status:</b> {selectedOrder.status}
-              </div>
-              <div className="mb-2">
-                <b>Buyer:</b> {selectedOrder.buyer?.name} ({selectedOrder.buyer?.email})
-              </div>
-              <div className="mb-2">
-                <b>Shipping Address:</b>
-                <div className="ml-2">
-                  <div>{selectedOrder.shippingAddress.fullName}</div>
-                  <div>{selectedOrder.shippingAddress.phone}</div>
-                  <div>
-                    {selectedOrder.shippingAddress.street}, {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state} - {selectedOrder.shippingAddress.pincode}
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold mb-1">
+                    Order #{selectedOrder.orderNumber}
+                  </h2>
+                  <span className={`px-2 py-1 rounded text-xs ${selectedOrder.status === "pending" ? "bg-yellow-100 text-yellow-800" : selectedOrder.status === "confirmed" ? "bg-green-100 text-green-800" : selectedOrder.status === "delivered" ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800"}`}>
+                    {selectedOrder.status.charAt(0).toUpperCase() + selectedOrder.status.slice(1)}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <div className="text-lg font-bold">
+                    ₹{typeof selectedOrder.totalAmount === "number"
+                      ? selectedOrder.totalAmount
+                      : (
+                          (typeof selectedOrder.subtotal === "number" ? selectedOrder.subtotal : selectedOrder.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0)
+                          + (typeof selectedOrder.deliveryFee === "number" ? selectedOrder.deliveryFee : 0)
+                        )
+                    }
                   </div>
-                  {selectedOrder.shippingAddress.landmark && (
-                    <div>Landmark: {selectedOrder.shippingAddress.landmark}</div>
-                  )}
+                  <div className="text-xs text-gray-500">
+                    {new Date(selectedOrder.createdAt).toLocaleString()}
+                  </div>
                 </div>
               </div>
-              <div className="mb-2">
-                <b>Payment Method:</b> {selectedOrder.paymentMethod}
-              </div>
-              <div className="mb-2">
-                <b>Subtotal:</b> ₹{typeof selectedOrder.subtotal === "number" ? selectedOrder.subtotal : selectedOrder.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0}
-              </div>
-              <div className="mb-2">
-                <b>Delivery Fee:</b> ₹{typeof selectedOrder.deliveryFee === "number" ? selectedOrder.deliveryFee : 0}
-              </div>
-              <div className="mb-2">
-                <b>Total Amount:</b> ₹{typeof selectedOrder.totalAmount === "number"
-                  ? selectedOrder.totalAmount
-                  : (
-                      (typeof selectedOrder.subtotal === "number" ? selectedOrder.subtotal : selectedOrder.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0)
-                      + (typeof selectedOrder.deliveryFee === "number" ? selectedOrder.deliveryFee : 0)
-                    )
-                }
-              </div>
-              <div className="mb-2">
-                <b>Order Date:</b> {new Date(selectedOrder.createdAt).toLocaleString()}
-              </div>
-              <div className="mb-2">
-                <b>Delivery Date:</b> {selectedOrder.deliveryDate ? new Date(selectedOrder.deliveryDate).toLocaleDateString() : "N/A"}
-              </div>
-              <div className="mb-2">
-                <b>Notes:</b> {selectedOrder.notes || "None"}
-              </div>
-              <div className="mb-4">
-                <b>Items:</b>
-                <ul className="list-disc ml-6 mt-2">
+              
+              {/* Order Items */}
+              <div className="mb-6">
+                <h3 className="font-semibold mb-2">Order Items</h3>
+                <div className="space-y-3">
                   {selectedOrder.items?.map((item, idx) => (
-                    <li key={idx}>
-                      <div>
-                        <span className="font-semibold">{item.product?.name || "Product"}</span>
-                        {" - "}
-                        {item.quantity} {item.unit || ""}
-                        {" @ ₹"}
-                        {item.price} each
-                        {" | Total: ₹"}
-                        {item.price * item.quantity}
-                        {item.product?.farmer && (
-                          <span className="ml-2 text-xs text-gray-500">
-                            (Farmer: {item.product.farmer.businessName || item.product.farmer.name})
-                          </span>
+                    <div key={idx} className="flex items-center justify-between border rounded-lg p-3 gap-4">
+                      <div className="flex items-center gap-3">
+                        {item.product?.images?.length > 0 && (
+                          <img
+                            src={item.product.images[0]}
+                            alt={item.product?.name || "Product"}
+                            className="w-16 h-16 object-cover rounded"
+                          />
                         )}
+                        <div>
+                          <span className="font-medium">{item.product?.name || "Product"}</span>
+                          <span className="ml-2 text-xs text-gray-500">
+                            {item.quantity} {item.unit || ""} @ ₹{item.price} each
+                          </span>
+                          {item.product?.farmer && (
+                            <span className="ml-2 text-xs text-gray-500">
+                              (Farmer: {item.product.farmer.businessName || item.product.farmer.name})
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </li>
+                      <div className="font-bold">
+                        ₹{item.price * item.quantity}
+                      </div>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
+
+              {/* Buyer & Shipping Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <h4 className="font-semibold mb-2">Buyer Information</h4>
+                  <div className="text-gray-700">
+                    <div><b>Name:</b> {selectedOrder.buyer?.name}</div>
+                    <div><b>Email:</b> {selectedOrder.buyer?.email}</div>
+                    <div><b>Phone:</b> {selectedOrder.buyer?.phone}</div>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Shipping Address</h4>
+                  <div className="text-gray-700">
+                    <div>{selectedOrder.shippingAddress?.fullName}</div>
+                    <div>{selectedOrder.shippingAddress?.phone}</div>
+                    <div>
+                      {selectedOrder.shippingAddress?.street}, {selectedOrder.shippingAddress?.city}, {selectedOrder.shippingAddress?.state} - {selectedOrder.shippingAddress?.pincode}
+                    </div>
+                    {selectedOrder.shippingAddress?.landmark && (
+                      <div>Landmark: {selectedOrder.shippingAddress.landmark}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Timeline */}
+              {selectedOrder.statusHistory && (
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-2">Order Timeline</h4>
+                  <div className="space-y-2">
+                    {selectedOrder.statusHistory.map((history, idx) => (
+                      <div key={idx} className="flex items-center space-x-3">
+                        <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                        <div>
+                          <span className="capitalize font-medium">{history.status}</span>
+                          <span className="ml-2 text-xs text-gray-500">{new Date(history.timestamp).toLocaleString()}</span>
+                          {history.note && (
+                            <div className="text-xs text-gray-500">{history.note}</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Payment & Summary */}
+              <div className="mb-6">
+                <h4 className="font-semibold mb-2">Payment & Summary</h4>
+                <div className="flex flex-col gap-1 text-gray-700">
+                  <div><b>Payment Method:</b> {selectedOrder.paymentMethod}</div>
+                  <div><b>Subtotal:</b> ₹{typeof selectedOrder.subtotal === "number" ? selectedOrder.subtotal : selectedOrder.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0}</div>
+                  <div><b>Delivery Fee:</b> ₹{typeof selectedOrder.deliveryFee === "number" ? selectedOrder.deliveryFee : 0}</div>
+                  <div><b>Total Amount:</b> ₹{typeof selectedOrder.totalAmount === "number"
+                    ? selectedOrder.totalAmount
+                    : (
+                        (typeof selectedOrder.subtotal === "number" ? selectedOrder.subtotal : selectedOrder.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0)
+                        + (typeof selectedOrder.deliveryFee === "number" ? selectedOrder.deliveryFee : 0)
+                      )
+                  }</div>
+                </div>
+              </div>
+
+              {/* Status Change */}
               <div className="mb-4">
                 <b>Change Status:</b>
                 <select

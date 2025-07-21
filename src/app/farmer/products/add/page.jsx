@@ -292,7 +292,7 @@ export default function AddProductPage() {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <IndianRupee className="h-5 w-5 mr-2" />
-                Pricing & Quantity
+                Add Quantity
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
