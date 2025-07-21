@@ -48,7 +48,7 @@ export default function HomePage() {
               <Link href="/products">Shop Now</Link>
             </Button>
           {!user && !isAuthenticated && (
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-green-600">
+            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white text-green-600">
               <Link href="/signup?role=farmer">Become a Farmer</Link>
             </Button>
           )}

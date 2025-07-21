@@ -20,7 +20,6 @@ export async function GET(request) {
     const maxPrice = parseFloat(searchParams.get('maxPrice')) || 1000
     const isOrganic = searchParams.get('isOrganic') === 'true'
 
-    // Build query
     const query = { isActive: true }
     
     if (category && category !== 'all') {

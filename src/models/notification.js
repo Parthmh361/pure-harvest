@@ -22,7 +22,17 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['info', 'success', 'warning', 'error', 'order', 'payment', 'system', 'product'],
+    required: true,
+    enum: [
+      'order', 
+      'order_confirmed', 
+      'order_shipped', 
+      'order_delivered', 
+      'low_stock', 
+      'review_received',
+      'product_created',
+      'product_activated',
+    ],
     default: 'info',
     index: true
   },
